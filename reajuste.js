@@ -1,24 +1,3 @@
-(function checkAccess() {
-    const ACCESS_KEY = 'dashboard_access_granted';
-    const currentPage = window.location.pathname.split('/').pop();
-
-    // Se não estiver na página de login, verifica o acesso
-    if (currentPage !== 'login.html') {
-        const hasAccess = localStorage.getItem(ACCESS_KEY);
-
-        if (!hasAccess) {
-            // Não tem acesso, redireciona para a página de login
-            window.location.href = 'login.html';
-        }
-    } else {
-        // Se estiver na página de login e JÁ tiver acesso, redireciona para o index
-        const hasAccess = localStorage.getItem(ACCESS_KEY);
-        if (hasAccess) {
-            window.location.href = 'index.html';
-        }
-    }
-})();
-
 // --- CONFIGURAÇÃO ---
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaWbT5hLTnR2DDP8XAq8DXlHuJ8hVolP2M1QzzANjgzyI8RLQBnLH2-sXMz-mPhk1G/exec"; 
 
