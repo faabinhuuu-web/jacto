@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário - Solicitação de Reajuste</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css"> 
+
+    <style>
+        :root {
+            --primary-color: #0A5193; /* Azul Jacto */
+            --bg-light: #F3F4F6;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            font-size: 0.9rem;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.85);
+            padding: 12px 20px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #fff;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .sub-link {
+            padding-left: 50px;
+            font-size: 0.85rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 240px;
+            min-height: 100vh;
+        }
+
+        /* Forms & Cards */
+        .form-section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid #F3F4F6;
+            padding-bottom: 0.2rem;
+        }
+
+        .input-group-text {
+            background-color: #F9FAFB;
+            border-color: #E5E7EB;
+            color: #6B7280;
+            font-size: 0.85rem;
+        }
+
+        .table-input {
+            border: 1px solid transparent;
+            background: transparent;
+            width: 100%;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .table-input:focus, .table-input:hover {
+            background: #FFFFFF;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .table-input:read-only {
+            color: #6B7280;
+            background: rgba(0,0,0,0.02);
+        }
+
+        /* Card de Impacto (Total) */
+        .total-card-highlight {
+            background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); /* Vermelho suave */
+            border: 1px solid #fecdd3;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 1rem;
+        }
+        
+        .total-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #be123c;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .total-value-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #9f1239;
+            background: transparent;
+            border: none;
+            width: 100%;
+            padding: 0;
+        }
+
+        /* Scrollbar customizada */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1; 
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8; 
+        }
+        
+        /* Table Wrapper Scroll */
+        .table-wrapper-scroll {
+            overflow-y: auto;
+            position: relative;
+        }
+        .table-modern thead th {
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 10;
+            box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 300px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        /* Taxa Cambio States */
+        .taxa-cambio-readonly {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        .taxa-cambio-enabled {
+            background-color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { margin-left: -240px; }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-xl navbar-dark top-navbar shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand me-4" href="index.html">
+                <img src="/img/logoJactoWhite.png" alt="Logomarca Jacto" class="img-fluid">
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainTopNavbar" aria-controls="mainTopNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="mainTopNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-xl-0 align-items-xl-center">
+                    
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">
+                            <i class="fas fa-home me-2"></i>Visão Geral
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="fornecedoresDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-users me-2"></i>Fornecedores
+                        </a>
+                        <ul class="dropdown-menu border-0" aria-labelledby="fornecedoresDropdown">
+                            <li><a href="homologados.html" class="dropdown-item"><i class="fas fa-users-viewfinder me-2"></i>Homologados</a></li>
+                            <li><a href="qaf.html" class="dropdown-item"><i class="fas fa-table-list me-2"></i>QAF (Questionário)</a></li>
+                            <li><a href="dashboard_spi.html" class="dropdown-item"><i class="fas fa-people-roof me-2"></i>SPI (Performance)</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="materiaisDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-list me-2"></i>Materiais
+                        </a>
+                        <ul class="dropdown-menu border-0" aria-labelledby="materiaisDropdown">
+                            <li><a href="cost_breakdown.html" class="dropdown-item"><i class="fas fa-chart-pie me-2"></i>Cost Breakdown</a></li>
+                            <li><a href="ppi.html" class="dropdown-item"><i class="fas fa-chart-area me-2"></i>PPI (Index)</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="strategicDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chess-king me-2"></i>Strategic Sourcing
+                        </a>
+                        <ul class="dropdown-menu border-0" aria-labelledby="strategicDropdown">
+                            <li><a href="dashboard_cost.html" class="dropdown-item"><i class="fas fa-dollar-sign me-2"></i>Volume de Saving</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="commoditiesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cubes me-2"></i>Commodities
+                        </a>
+                        <ul class="dropdown-menu border-0" aria-labelledby="commoditiesDropdown">
+                            <li><a href="commodities.html" class="dropdown-item"><i class="fas fa-chart-line me-2"></i>Mercado</a></li>
+                            <li><a href="projecoes.html" class="dropdown-item"><i class="fas fa-forward me-2"></i>Projeções</a></li>
+                            <li><a href="clipping.html" class="dropdown-item"><i class="fas fa-newspaper me-2"></i>Clipping</a></li>
+                        </ul>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="estoque.html" class="nav-link">
+                            <i class="fas fa-boxes me-2"></i>Estoque
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a href="inventario.html" class="nav-link">
+                            <i class="fas fa-clipboard-list me-2"></i>Inventário
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content top-nav-layout">
+        <div class="container-fluid p-4">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Solicitação de Reajuste</h4>
+                    <p class="text-muted small mb-0">Check-list e análise de impacto financeiro</p>
+                </div>
+                <div class="d-none d-md-block">
+                    <button type="button" class="btn btn-dark btn-sm px-4 fw-bold rounded-pill ms-auto" onclick="window.location.href='dashboard_cost.html'" style="height: 34px;">
+                        <i class="fas fa-left-long me-2"></i>Voltar
+                     </button>
+                    <span class="badge bg-white text-dark border shadow-sm py-2 px-3 rounded-pill">
+                        <i class="far fa-calendar-alt me-2 text-primary"></i> <span id="current-date-display">Hoje</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-2 d-flex justify-content-center bg-white rounded-3">
+                    <div class="btn-group w-50" role="group">
+                        <button type="button" class="btn btn-primary fw-bold" id="btn-mode-post" onclick="setMode('post')">
+                            <i class="fas fa-plus-circle me-2"></i>Nova Solicitação
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary fw-bold" id="btn-mode-get" onclick="setMode('get')">
+                            <i class="fas fa-history me-2"></i>Histórico
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="local-insert-view">
+                <form id="reajusteForm" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="action-type" name="action" value="insert">
+                    <input type="hidden" id="row-id" name="rowId" value="">
+                    
+                    <input type="hidden" id="RawImpactoPleito" name="RawImpactoPleito">
+                    <input type="hidden" id="RawImpactoNegoc" name="RawImpactoNegoc">
+                    <input type="hidden" id="RawImpactoNeutralizado" name="RawImpactoNeutralizado">
+                    <input type="hidden" id="RawPercentualNegoc" name="RawPercentualNegoc">
+                    
+                    <div class="row g-4">
+                        <div class="col-lg-3"> 
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                                    <h6 class="fw-bold mb-0 text-primary"><i class="fas fa-clipboard-check me-2"></i>Check List</h6>
+                                </div>
+                                <div class="card-body p-4 pt-2 custom-scrollbar" style="max-height: 750px; overflow-y: auto;">
+                                    
+                                    <div class="form-section-title">Perfil do Fornecedor</div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold text-muted">Unidade de Negócio</label>
+                                        <select id="BusinessUnit" name="BusinessUnit" class="form-select form-select-sm" required onchange="updateCurrencyAndExchange()">
+                                            <option value="" disabled selected>Selecione...</option>
+                                            <option value="Portáteis BR">Portáteis BR</option>
+                                            <option value="Interman">Interman</option>
+                                            <option value="Solo">Solo</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold text-muted">Comprador</label>
+                                        <input type="text" id="Comprador" name="Comprador" class="form-control form-control-sm" required>
+                                    </div>
+
+                                    <div class="form-section-title">Análise de Impacto</div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold text-muted">Motivo da Solicitação</label>
+                                        <textarea id="MotivoReajuste" name="MotivoReajuste" class="form-control form-control-sm" rows="2" required placeholder="Ex: Inflação, Dissídio, Matéria Prima..."></textarea>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold text-muted">Análise de competitividade</label>
+                                        <textarea id="AnaliseCompetitividade" name="AnaliseCompetitividade" class="form-control form-control-sm" rows="2" placeholder="Comparativo com mercado..."></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold text-muted">Análise de commodities</label>
+                                        <textarea id="AnaliseCommodities" name="AnaliseCommodities" class="form-control form-control-sm" rows="2" placeholder="Tendências de matéria-prima..."></textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small fw-bold text-muted">Há redução mapeada para neutralizar?</label>
+                                        <textarea id="ReducaoMapeada" name="ReducaoMapeada" class="form-control form-control-sm" rows="2" placeholder="Redução Mapeada?"></textarea>
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted">Impacto (Pleito)</label>
+                                            <input type="text" id="TotalImpactoPleitoDisplay" class="form-control form-control-sm" readonly placeholder="0,00">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted">Impacto (Negoc.)</label>
+                                            <input type="text" id="TotalImpactoNegocDisplay" class="form-control form-control-sm text-danger fw-bold" readonly placeholder="0,00">
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted">Impacto Neutralizado</label>
+                                            <input type="text" id="ImpactoNeutralizadoDisplay" class="form-control form-control-sm fw-bold" readonly placeholder="0,00">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted">% média reajuste</label>
+                                            <input type="text" id="PercentualNegocDisplay" class="form-control form-control-sm text-danger fw-bold" readonly placeholder="0.00%">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-section-title">Dados do Fornecedor</div>
+                                    
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-4">
+                                            <label class="form-label small fw-bold text-muted">Cód.</label>
+                                            <input type="text" name="CodFornecedor" id="CodFornecedor" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="col-8">
+                                            <label class="form-label small fw-bold text-muted">Nome do Fornecedor</label>
+                                            <input type="text" id="Fornecedor" name="Fornecedor" class="form-control form-control-sm" required>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted">Data Implementação</label>
+                                            <input type="date" id="DataVigencia" name="DataVigencia" class="form-control form-control-sm" required>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted">Novo Prazo Pagto</label>
+                                            <input type="text" id="PrazoNovo" name="PrazoNovo" class="form-control form-control-sm">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-section-title">Financeiro</div>
+                                    <div class="row g-2 mb-2">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted">Moeda</label>
+                                            <select id="currency-select" class="form-select form-select-sm" onchange="changeCurrency(this.value)">
+                                                <option value="BRL">BRL (R$)</option>
+                                                <option value="USD">USD ($)</option>
+                                                <option value="THB">THB (฿)</option>
+                                                <option value="EUR">EUR (€)</option>
+                                                </select>
+                                            <input type="hidden" id="Moeda" name="Moeda" value="BRL">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold text-muted" id="label-taxa-cambio">Taxa (p/ Padrão)</label>
+                                            <input type="text" id="TaxaCambio" name="TaxaCambio" class="form-control form-control-sm text-end" value="1,0000" oninput="calculateTotalImpact()" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="total-card-highlight">
+                                        <div class="row">
+                                            <div class="col-12 mb-1">
+                                                <div class="total-label" id="label-impacto-anual">Impacto Anual Total (BRL)</div>
+                                                <input type="text" id="ImpactoAnualTotal" name="ImpactoAnualTotal" class="total-value-display" value="0,00" readonly data-raw-value="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <label class="form-label small fw-bold text-muted">Comentários</label>
+                                        <textarea id="Comentarios" name="Comentarios" class="form-control form-control-sm" rows="2"></textarea>
+                                    </div>
+
+                                    <div class="mt-4" id="form-actions">
+                                        <button type="submit" id="submit-button" class="btn btn-danger w-100 fw-bold py-2 rounded-pill shadow-sm">
+                                            <i class="fas fa-save me-2"></i>Salvar Reajuste
+                                        </button>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-9"> 
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-list me-2"></i>Lista de Materiais</h6>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="addRow()">
+                                            <i class="fas fa-plus me-1"></i> Add Item
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLastRow()">
+                                            <i class="fas fa-trash me-1"></i> Remover
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="table-responsive table-wrapper-scroll custom-scrollbar" style="max-height: 700px; border: 1px solid #f3f4f6; border-radius: 8px;">
+                                        <table class="table table-hover align-middle mb-0 table-modern" id="local-material-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;">#</th>
+                                                    <th style="width: 12%;">Cód.</th>
+                                                    <th style="width: 20%;">Descrição</th>
+                                                    <th id="th-preco-atual" style="width: 10%;" class="text-end">Preço Atual</th>
+                                                    <th id="th-preco-proposta" style="width: 10%;" class="text-end text-muted">Proposta</th>
+                                                    <th id="th-preco-novo" style="width: 10%;" class="text-end">Preço Final</th>
+                                                    <th id="th-volume-anual" style="width: 8%;" class="text-end">Vol.</th>
+                                                    <th id="th-impacto-total" style="width: 12%;" class="text-end text-primary">Impacto (Pleito)</th> 
+                                                    <th id="th-impacto-anual" style="width: 12%;" class="text-end">Impacto (Negoc.)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="mt-3 text-muted small fst-italic">
+                                        <i class="fas fa-info-circle me-1"></i> Dica: Preencha Preço Atual, Proposta, Preço Final e Volume para calcular. **Você pode copiar células do Excel e colar diretamente na tabela acima.**
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="get-data-view" style="display: none;">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3 px-4">
+                        <h6 class="fw-bold mb-0">Registros Salvos</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive table-wrapper-scroll custom-scrollbar" style="max-height: 500px; overflow-y: auto;">
+                            <table class="table table-hover align-middle mb-0 table-modern" id="data-table">
+                                <thead class="sticky-top bg-white shadow-sm-sm">
+                                    <tr>
+                                        <th class="ps-4">Ações</th>
+                                        <th>Data Vigência</th>
+                                        <th>Unidade</th>
+                                        <th>Fornecedor</th>
+                                        <th class="text-center">Impacto (Negoc.)</th>
+                                        <th class="text-center">Cost Avoid</th>
+                                        <th>Comentários</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="post-status-toast" class="toast align-items-center text-white bg-primary border-0 status-toast" role="alert">
+        <div class="d-flex">
+            <div class="toast-body fw-bold" id="toast-message">Processando...</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="hideToast()"></button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/scripts/reajuste.js"></script>
+    
+</body>
+</html>
