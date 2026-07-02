@@ -40,7 +40,7 @@
 
         /* Main Content */
         .main-content {
-            margin-left: 0; /* Adjusted since top navbar was removed */
+            margin-left: 0; 
             min-height: 100vh;
         }
 
@@ -179,9 +179,6 @@
                     <p class="text-muted small mb-0">Checklist and financial impact analysis</p>
                 </div>
                 <div class="d-none d-md-block">
-                    <button type="button" class="btn btn-dark btn-sm px-4 fw-bold rounded-pill ms-auto" onclick="window.location.href='dashboard_cost.html'" style="height: 34px;">
-                        <i class="fas fa-left-long me-2"></i>Back
-                     </button>
                     <span class="badge bg-white text-dark border shadow-sm py-2 px-3 rounded-pill">
                         <i class="far fa-calendar-alt me-2 text-primary"></i> <span id="current-date-display">Today</span>
                     </span>
@@ -193,9 +190,6 @@
                     <div class="btn-group w-50" role="group">
                         <button type="button" class="btn btn-primary fw-bold" id="btn-mode-post" onclick="setMode('post')">
                             <i class="fas fa-plus-circle me-2"></i>New Request
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary fw-bold" id="btn-mode-get" onclick="setMode('get')">
-                            <i class="fas fa-history me-2"></i>History
                         </button>
                     </div>
                 </div>
@@ -302,12 +296,12 @@
                                         <div class="col-6">
                                             <label class="form-label small fw-bold text-muted">Currency</label>
                                             <select id="currency-select" class="form-select form-select-sm" onchange="changeCurrency(this.value)">
+                                                <option value="USD" selected>USD ($)</option>
                                                 <option value="BRL">BRL (R$)</option>
-                                                <option value="USD">USD ($)</option>
                                                 <option value="THB">THB (฿)</option>
                                                 <option value="EUR">EUR (€)</option>
-                                                </select>
-                                            <input type="hidden" id="Moeda" name="Moeda" value="BRL">
+                                            </select>
+                                            <input type="hidden" id="Moeda" name="Moeda" value="USD">
                                         </div>
                                         <div class="col-6">
                                             <label class="form-label small fw-bold text-muted" id="label-taxa-cambio">Rate (to Standard)</label>
@@ -318,7 +312,7 @@
                                     <div class="total-card-highlight">
                                         <div class="row">
                                             <div class="col-12 mb-1">
-                                                <div class="total-label" id="label-impacto-anual">Total Annual Impact (BRL)</div>
+                                                <div class="total-label" id="label-impacto-anual">Total Annual Impact (USD)</div>
                                                 <input type="text" id="ImpactoAnualTotal" name="ImpactoAnualTotal" class="total-value-display" value="0.00" readonly data-raw-value="0.00">
                                             </div>
                                         </div>
@@ -369,7 +363,7 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                </tbody>
+                                            </tbody>
                                         </table>
                                     </div>
                                     <div class="mt-3 text-muted small fst-italic">
@@ -402,7 +396,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    </tbody>
+                                </tbody>
                             </table>
                         </div>
                     </div>
