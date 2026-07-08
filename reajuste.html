@@ -16,7 +16,7 @@
             --bg-light: #F3F4F6;
         }
         
-        /* Força o HTML e o Body a ocuparem 100% da largura sem criar barras de rolagem horizontais */
+        /* Força o HTML e o Body a ocuparem 100% da largura de ponta a ponta */
         html, body {
             margin: 0;
             padding: 0;
@@ -27,16 +27,10 @@
             font-size: 0.9rem;
         }
 
-        /* Main Content - Ajustado para tela cheia e 100% de largura */
+        /* Main Content ocupa toda a largura útil */
         .main-content {
             min-height: 100vh;
             width: 100%;
-        }
-
-        /* Ajuste fino para as linhas do Bootstrap não estourarem as laterais */
-        .row {
-            margin-right: 0;
-            margin-left: 0;
         }
 
         /* Forms & Cards */
@@ -158,9 +152,9 @@
 <body>
 
     <main class="main-content">
-        <div class="container-fluid px-2 py-4">
+        <div class="container-fluid px-3 py-4">
             
-            <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+            <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h4 class="fw-bold text-dark mb-1">Solicitação de Reajuste</h4>
                     <p class="text-muted small mb-0">Check-list e análise de impacto financeiro</p>
@@ -334,7 +328,7 @@
                                                     <th id="th-preco-atual" style="width: 10%;" class="text-end">Preço Atual</th>
                                                     <th id="th-preco-proposta" style="width: 10%;" class="text-end text-muted">Proposta</th>
                                                     <th id="th-preco-novo" style="width: 10%;" class="text-end">Preço Final</th>
-                                                    <th id="th-volume-anual" style="width: 8%;" class="text-end">Vol.</th>
+                                                    <th style="width: 8%;" class="text-end" id="th-volume-anual">Vol.</th>
                                                     <th id="th-impacto-total" style="width: 12%;" class="text-end text-primary">Impacto (Pleito)</th> 
                                                     <th id="th-impacto-anual" style="width: 12%;" class="text-end">Impacto (Negoc.)</th>
                                                 </tr>
