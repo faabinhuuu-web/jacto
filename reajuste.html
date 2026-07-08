@@ -16,15 +16,27 @@
             --bg-light: #F3F4F6;
         }
         
-        body {
-            font-family: 'Inter', sans-serif;
+        /* Força o HTML e o Body a ocuparem 100% da largura sem criar barras de rolagem horizontais */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
             background-color: var(--bg-light);
+            font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
         }
 
-        /* Main Content - Ajustado para tela cheia sem menus */
+        /* Main Content - Ajustado para tela cheia e 100% de largura */
         .main-content {
             min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Ajuste fino para as linhas do Bootstrap não estourarem as laterais */
+        .row {
+            margin-right: 0;
+            margin-left: 0;
         }
 
         /* Forms & Cards */
