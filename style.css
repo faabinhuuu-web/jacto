@@ -94,13 +94,6 @@ body {
     border-left-color: var(--accent-blue);
 }
 
-/* --- Layout Principal --- */
-.main-content {
-    margin-left: var(--sidebar-width);
-    padding: 2rem;
-    transition: margin-left 0.3s;
-}
-
 header {
     background: transparent;
     padding: 0 0 2rem 0;
