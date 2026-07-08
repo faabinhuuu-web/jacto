@@ -3,19 +3,15 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyaWbT5hLTnR2DDP8XAq
 
 document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('pt-BR');
 
-let currentMode = 'post';
-let loadedData = []; 
-
 // --- DEFINIÇÃO DE MOEDAS E TAXAS BASE ---
 const CURRENCIES = {
-    'BRL': { symbol: 'R$', locale: 'pt-BR' },
     'USD': { symbol: '$', locale: 'en-US' },
     'EUR': { symbol: '€', locale: 'de-DE' },
     'THB': { symbol: '฿', locale: 'th-TH' },
     'CNY': { symbol: '¥', locale: 'zh-CN' }
 };
 
-let currentCurrency = 'BRL'; // Moeda de Visualização (Input)
+let currentCurrency = 'USD'; // Moeda padrão inicial
 
 // Definição de moeda base por BU
 const BASE_CURRENCY_MAP = {
@@ -25,19 +21,24 @@ const BASE_CURRENCY_MAP = {
     'Solo CHN': 'CNY'
 };
 
+// Matriz de câmbio atualizada sem referências ao BRL
 const EXCHANGE_RATES = {
-     'BRL': { 'BRL': 1.0000, 'USD': 0.1833, 'EUR': 0.1700, 'CNY': 1.3200 },
-     'USD': { 'BRL': 5.4500, 'USD': 1.0000, 'EUR': 0.9300, 'CNY': 7.2300 },
-     'THB': { 'BRL': 0.1500, 'USD': 0.0290, 'EUR': 0.0250, 'CNY': 0.2000 },
-     'EUR': { 'BRL': 5.9000, 'USD': 1.0700, 'EUR': 1.0000, 'CNY': 7.7500 },
-     'CNY': { 'BRL': 0.7550, 'USD': 0.1380, 'EUR': 0.1290, 'CNY': 1.0000 }
+     'USD': { 'USD': 1.0000, 'EUR': 0.9300, 'CNY': 7.2300, 'THB': 36.5000 },
+     'EUR': { 'USD': 1.0700, 'EUR': 1.0000, 'CNY': 7.7500, 'THB': 39.2000 },
+     'CNY': { 'USD': 0.1380, 'EUR': 0.1290, 'CNY': 1.0000, 'THB': 5.0500 },
+     'THB': { 'USD': 0.0274, 'EUR': 0.0255, 'CNY': 0.1980, 'THB': 1.0000 }
 };
 
 function parseLocaleFloat(value) {
     if (typeof value === 'string') {
-        // Remove símbolos de moeda e espaços, depois troca virgula por ponto
         let clean = value.replace(/[^\d.,-]/g, ''); 
-        return parseFloat(clean.replace(/\./g, '').replace(/,/g, '.')) || 0;
+        // Identifica se o padrão usa ponto ou vírgula para decimais
+        if (clean.includes(',') && clean.includes('.')) {
+            clean = clean.replace(/\./g, '').replace(/,/g, '.');
+        } else if (clean.includes(',')) {
+            clean = clean.replace(/,/g, '.');
+        }
+        return parseFloat(clean) || 0;
     }
     return parseFloat(value) || 0;
 }
@@ -57,7 +58,7 @@ function formatDisplayCurrency(value) {
 
 function formatBaseCurrency(value, baseCurrency) {
     const numValue = parseFloat(value) || 0;
-    const bCurr = CURRENCIES[baseCurrency] || CURRENCIES['BRL'];
+    const bCurr = CURRENCIES[baseCurrency] || CURRENCIES['USD'];
     return numValue.toLocaleString(bCurr.locale, {
         style: 'currency', currency: baseCurrency
     });
@@ -73,7 +74,7 @@ function getExchangeRate(inputCurrency, baseCurrency) {
 
 function updateTaxaCambioState(currency, businessUnit) {
     const taxaCambioInput = document.getElementById('TaxaCambio');
-    const baseCurrency = BASE_CURRENCY_MAP[businessUnit] || 'BRL';
+    const baseCurrency = BASE_CURRENCY_MAP[businessUnit] || 'USD';
     
     const rate = getExchangeRate(currency, baseCurrency);
     const isBaseCurrency = (currency === baseCurrency);
@@ -94,13 +95,11 @@ function updateCurrencyAndExchange() {
     const businessUnit = document.getElementById('BusinessUnit').value;
     const currencySelect = document.getElementById('currency-select');
     
-    const baseCurrency = BASE_CURRENCY_MAP[businessUnit] || 'BRL';
+    const baseCurrency = BASE_CURRENCY_MAP[businessUnit] || 'USD';
     
-    if (!currencySelect.value) {
-        currencySelect.value = baseCurrency;
-    }
-
-    currentCurrency = currencySelect.value;
+    // Força a alteração automática da moeda ao mudar a Unidade de Negócio
+    currencySelect.value = baseCurrency;
+    currentCurrency = baseCurrency;
     
     document.getElementById('label-taxa-cambio').textContent = `Taxa (-> ${baseCurrency})`;
     document.getElementById('label-impacto-anual').textContent = `Impacto Anual Total (${baseCurrency})`;
@@ -122,7 +121,26 @@ function updateCurrencyAndExchange() {
 function changeCurrency(newCurrency) {
     currentCurrency = newCurrency;
     document.getElementById('Moeda').value = newCurrency;
-    updateCurrencyAndExchange();
+    
+    const businessUnit = document.getElementById('BusinessUnit').value;
+    document.getElementById('label-taxa-cambio').textContent = `Taxa (-> ${BASE_CURRENCY_MAP[businessUnit] || 'USD'})`;
+    
+    updateTaxaCambioState(currentCurrency, businessUnit);
+    
+    const sym = CURRENCIES[currentCurrency].symbol;
+    document.getElementById('th-preco-atual').textContent = `Preço Atual (${sym})`;
+    document.getElementById('th-preco-proposta').textContent = `Proposta (${sym})`;
+    document.getElementById('th-preco-novo').textContent = `Preço Final (${sym})`;
+    document.getElementById('th-impacto-total').textContent = `Impacto (Pleito) (${sym})`;
+    document.getElementById('th-impacto-anual').textContent = `Impacto (Negoc.) (${sym})`;
+    
+    // Recalcula as linhas com a nova máscara de símbolo visual
+    document.querySelectorAll('.item-row').forEach(row => {
+        const inp = row.querySelector('.price-current');
+        if (inp && inp.value) calcRow(inp);
+    });
+    
+    calculateTotalImpact();
 }
 
 // --- TABELA DE MATERIAIS ---
@@ -193,7 +211,7 @@ function calculateTotalImpact() {
     
     const taxa = parseLocaleFloat(document.getElementById('TaxaCambio').value) || 1;
     const bu = document.getElementById('BusinessUnit').value;
-    const baseCurrency = BASE_CURRENCY_MAP[bu] || 'BRL';
+    const baseCurrency = BASE_CURRENCY_MAP[bu] || 'USD';
 
     document.querySelectorAll('.item-row').forEach(row => {
         totalImpactAnnual += parseFloat(row.querySelector('.impact-annual').dataset.raw) || 0;
@@ -227,6 +245,7 @@ function calculateTotalImpact() {
     document.getElementById('RawPercentualNegoc').value = percNegoc.toFixed(2);
 }
 
+// Lógica de colagem do Excel
 document.addEventListener('paste', function(e) {
     const activeElement = document.activeElement;
     const table = document.getElementById('local-material-table');
@@ -296,15 +315,8 @@ async function handleFormSubmit(e) {
     showToast("Enviando dados...", "primary");
     
     const formData = new FormData(form);
+    formData.set('action', 'insert');
 
-    const rowId = document.getElementById('row-id').value;
-    if(rowId) {
-        formData.set('rowId', rowId); 
-    }
-    const action = document.getElementById('action-type').value;
-    formData.set('action', action);
-
-    // Dados Financeiros
     const taxa = parseLocaleFloat(document.getElementById('TaxaCambio').value);
     formData.set('TaxaCambio', toServerFormat(taxa, 4));
     
@@ -338,16 +350,9 @@ async function handleFormSubmit(e) {
         const data = await res.json();
         
         if(data.result === 'success' || data.status === 'success') {
-            showToast(`Salvo! ID: ${data.id || 'Ok'}`, "success");
-            
-            // Só abre o e-mail automaticamente se for uma NOVA solicitação
-            if (action === 'insert') {
-                    await copyAndOpenOutlook();
-            }
-            
-            resetFormToInsert();
-            if(currentMode === 'get') loadData(); 
-
+            showToast(`Salvo com sucesso!`, "success");
+            await copyAndOpenOutlook();
+            resetForm();
         } else {
             showToast("Erro: " + (data.error || data.message), "danger");
         }
@@ -357,225 +362,45 @@ async function handleFormSubmit(e) {
     } finally {
         submitButton.disabled = false;
         submitButton.innerHTML = originalBtnHtml;
-        if (action === 'edit') setMode('get');
     }
 }
 
-function resetFormToInsert() {
+function resetForm() {
     document.getElementById('reajusteForm').reset();
-    document.getElementById('action-type').value = 'insert';
-    document.getElementById('row-id').value = '';
     
     document.querySelector('#local-material-table tbody').innerHTML = TEMPLATE_ROW;
     document.querySelector('.row-id-field').textContent = '1';
     
-    const btn = document.getElementById('submit-button');
-    btn.className = 'btn btn-danger w-100 fw-bold py-2 rounded-pill shadow-sm';
-    btn.innerHTML = '<i class="fas fa-save me-2"></i>Salvar Reajuste';
-    
-    const cancelBtn = document.getElementById('cancel-button');
-    if(cancelBtn) cancelBtn.remove();
-    
-    const emailBtn = document.getElementById('send-email-button-edit');
-    if(emailBtn) emailBtn.remove();
-    
-    document.getElementById('currency-select').value = 'BRL';
+    document.getElementById('currency-select').value = 'USD';
     document.getElementById('BusinessUnit').value = "";
-    changeCurrency('BRL');
+    changeCurrency('USD');
 }
 
-// --- GET DATA (Histórico) ---
-function setMode(mode) {
-    currentMode = mode;
-    document.getElementById('local-insert-view').style.display = mode === 'post' ? 'block' : 'none';
-    document.getElementById('get-data-view').style.display = mode === 'get' ? 'block' : 'none';
-    
-    const btnPost = document.getElementById('btn-mode-post');
-    const btnGet = document.getElementById('btn-mode-get');
-    
-    if(mode === 'post') {
-        btnPost.classList.replace('btn-outline-secondary', 'btn-primary');
-        btnGet.classList.replace('btn-primary', 'btn-outline-secondary');
-    } else {
-        btnPost.classList.replace('btn-primary', 'btn-outline-secondary');
-        btnGet.classList.replace('btn-outline-secondary', 'btn-primary');
-        loadData();
-        resetFormToInsert(); 
-    }
-}
-
-function loadData() {
-    const tbody = document.querySelector('#data-table tbody');
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></td></tr>';
-    
-    fetch(SCRIPT_URL + '?action=readReajuste')
-    .then(res => res.json())
-    .then(data => {
-        loadedData = data; 
-        tbody.innerHTML = '';
-        if(!data || !data.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Nenhum registro encontrado.</td></tr>';
-            return;
-        }
-        
-        data.forEach((row, index) => {
-            let dateVig = new Date(row['Data Vigência']).toLocaleDateString('pt-BR');
-            let val = row['Impacto (Negoc.)'];
-            let val2 = row['Impacto Neutralizado'];
-            if(typeof val === 'string') val = parseFloat(val.replace('.','').replace(',','.'));
-            let baseCurrency = BASE_CURRENCY_MAP[row['BusinessUnit']] || 'BRL';
-            let impactoNegoc = (val || 0).toLocaleString(CURRENCIES[baseCurrency].locale, {style:'currency', currency: baseCurrency });
-            let impactoNeut = (val2 || 0).toLocaleString(CURRENCIES[baseCurrency].locale, {style:'currency', currency: baseCurrency });
-            
-            let html = `<tr>
-                <td class="ps-4"><button onclick="fetchAndEditRow(${index})" class="btn btn-sm btn-outline-primary rounded-pill px-3"><i class="fas fa-edit me-1"></i>Editar</button></td>
-                <td>${dateVig}</td>
-                <td><span class="badge bg-light text-dark border">${row['BusinessUnit'] || ''}</span></td>
-                <td>${row['Fornecedor'] || ''}</td>
-                <td class="text-center text-danger fw-bold">${impactoNegoc}</td>
-                <td class="text-center text-success fw-bold">${impactoNeut}</td>
-                <td class="small text-muted text-truncate" style="max-width: 150px;">${row['Comentários'] || ''}</td>
-            </tr>`;
-            tbody.innerHTML += html;
-        });
-    })
-    .catch(e => {
-        console.error(e);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Erro ao carregar dados.</td></tr>';
-    });
-}
-
-// --- EDIT FUNCTION ---
-function fetchAndEditRow(index) {
-    setMode('post');
-    const item = loadedData[index];
-    if(!item) return showToast("Erro ao carregar item.", "danger");
-    
-    const actionsDiv = document.getElementById('form-actions');
-    if(!document.getElementById('send-email-button-edit')) {
-        const btn = document.createElement('button');
-        btn.id = 'send-email-button-edit';
-        btn.className = 'btn btn-outline-dark w-100 fw-bold py-2 rounded-pill shadow-sm mb-2';
-        btn.type = 'button';
-        btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Enviar E-mail (Outlook)';
-        btn.onclick = copyAndOpenOutlook;
-        actionsDiv.insertBefore(btn, document.getElementById('submit-button'));
-    }
-
-    document.getElementById('action-type').value = 'edit';
-    document.getElementById('row-id').value = item.row;
-
-    document.getElementById('BusinessUnit').value = item['BusinessUnit'] || '';
-    document.getElementById('Comprador').value = item['Comprador'] || '';
-    document.getElementById('MotivoReajuste').value = item['Motivo'] || '';
-    document.getElementById('CodFornecedor').value = item['Cód. Fornecedor'] || '';
-    document.getElementById('Fornecedor').value = item['Fornecedor'] || '';
-    document.getElementById('PrazoNovo').value = item['Novo Prazo'] || '';
-    document.getElementById('Comentarios').value = item['Comentários'] || '';
-
-    document.getElementById('AnaliseCompetitividade').value = item['Análise Competitividade'] || '';
-    document.getElementById('AnaliseCommodities').value = item['Análise Commodities'] || '';
-    document.getElementById('ReducaoMapeada').value = item['Redução Mapeada'] || '';
-
-    if(item['Data Vigência']) {
-        let d = item['Data Vigência'];
-        if(typeof d === 'string' && d.includes('T')) d = d.split('T')[0];
-        document.getElementById('DataVigencia').value = d;
-    }
-
-    const moedaSalva = item['Moeda'] || 'BRL';
-    const taxaSalva = item['Taxa Câmbio'] ? parseLocaleFloat(String(item['Taxa Câmbio'])) : 1;
-
-    updateCurrencyAndExchange(); 
-    
-    const currSelect = document.getElementById('currency-select');
-    currSelect.value = moedaSalva;
-    currentCurrency = moedaSalva;
-    
-    document.getElementById('TaxaCambio').value = toServerFormat(taxaSalva, 4);
-    changeCurrency(currSelect.value); 
-
-    const tbody = document.querySelector('#local-material-table tbody');
-    tbody.innerHTML = '';
-    
-    let matList = [];
-    try {
-        let rawJson = item['JSON Materiais'];
-        if(!rawJson) rawJson = item['MaterialList'];
-
-        if(rawJson && typeof rawJson === 'string') {
-            matList = JSON.parse(rawJson);
-        } else if(rawJson) {
-            matList = rawJson;
-        }
-    } catch(e) { console.error("Erro parse json", e); }
-
-    if(matList.length) {
-        matList.forEach(mat => {
-            tbody.insertAdjacentHTML('beforeend', TEMPLATE_ROW.trim());
-            const newRow = tbody.lastElementChild;
-            const inputs = newRow.querySelectorAll('input');
-            
-            inputs[0].value = mat.CodMat || '';
-            inputs[1].value = mat.Descricao || '';
-            inputs[2].value = (mat.PrecoAntes || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            inputs[3].value = (mat.PrecoProposta || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            inputs[4].value = (mat.PrecoDepois || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            inputs[5].value = (mat.VolumeAnual || 0).toLocaleString('pt-BR', {maximumFractionDigits: 0});
-            
-            calcRow(inputs[2]); 
-        });
-    } else {
-        tbody.insertAdjacentHTML('beforeend', TEMPLATE_ROW.trim());
-    }
-    updateIndices();
-    calculateTotalImpact(); 
-
-    const btn = document.getElementById('submit-button');
-    btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Atualizar Registro';
-    btn.className = 'btn btn-warning w-100 fw-bold py-2 rounded-pill shadow-sm text-dark';
-
-    if(!document.getElementById('cancel-button')) {
-            const cBtn = document.createElement('button');
-            cBtn.id = 'cancel-button';
-            cBtn.className = 'btn btn-outline-danger w-100 fw-bold py-2 rounded-pill mt-2';
-            cBtn.innerHTML = 'Cancelar Edição';
-            cBtn.type = 'button';
-            cBtn.onclick = resetFormToInsert;
-            actionsDiv.appendChild(cBtn);
-    }
-    showToast("Modo de edição ativado.", "success");
-}
-
-// --- FUNÇÃO E-MAIL / OUTLOOK MODIFICADA ---
+// --- FUNÇÃO E-MAIL / OUTLOOK ---
 async function copyAndOpenOutlook() {
     const unit = document.getElementById('BusinessUnit').value || '';
     const fornecedor = document.getElementById('Fornecedor').value || '';
     const motivo = document.getElementById('MotivoReajuste').value || '';
     const dataVig = document.getElementById('DataVigencia').value || '';
     const impacto = document.getElementById('TotalImpactoNegocDisplay').value || '';
-    const avoidance = document.getElementById('ImpactoNeutralizadoDisplay').value || '0,00'; // NOVO: Campo de Neutralização
+    const avoidance = document.getElementById('ImpactoNeutralizadoDisplay').value || '0,00'; 
     const perc = document.getElementById('PercentualNegocDisplay').value || '';
     const comentarios = document.getElementById('Comentarios').value || '';
     const comprador = document.getElementById('Comprador').value || '';
 
-    // NOVOS CAMPOS
     const aComp = document.getElementById('AnaliseCompetitividade').value || '-';
     const aComm = document.getElementById('AnaliseCommodities').value || '-';
     const rMap = document.getElementById('ReducaoMapeada').value || '-';
     
-    // ESTILOS
     const styleHeader = 'background-color: #000; color: white; font-weight: bold; padding: 5px; border: 1px solid #000; text-align: center;';
     const styleCellLabel = 'background-color: #f2f2f2; font-weight: bold; padding: 5px; border: 1px solid #000; color: #000;';
     const styleCellVal = 'padding: 5px; border: 1px solid #000; text-align: center; color: #000;';
     const styleBold = 'font-weight: bold; color: #000;';
 
-    // Helper para formatar a moeda com símbolo e 2 casas decimais na tabela de itens
     const symbol = CURRENCIES[currentCurrency] ? CURRENCIES[currentCurrency].symbol : '';
     const formatMoney = (val) => {
         let num = parseLocaleFloat(val);
-        // Garante 2 casas decimais sempre e adiciona o símbolo
-        return symbol + ' ' + num.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        return symbol + ' ' + num.toLocaleString(CURRENCIES[currentCurrency].locale, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     };
 
     let html = `
@@ -584,7 +409,7 @@ async function copyAndOpenOutlook() {
             <p>Segue análise de impacto para reajuste de preço - <strong>${fornecedor}</strong>:</p>
             <br>
             <table style="border-collapse: collapse; width: 100%; max-width: 800px; font-size: 10pt; border: 1px solid #000;">
-                    <thead>
+                <thead>
                     <tr><th style="${styleHeader}" width="40%">Descrição</th><th style="${styleHeader}" width="60%">Detalhes</th></tr>
                 </thead>
                 <tbody>
@@ -600,12 +425,7 @@ async function copyAndOpenOutlook() {
                     <tr><td style="${styleCellLabel}">Vigência:</td><td style="${styleCellVal}">${dataVig}</td></tr>
                     <tr><td style="${styleCellLabel}">% Reajuste:</td><td style="${styleCellVal} ${styleBold}">${perc}</td></tr>
                     <tr><td style="${styleCellLabel}">Impacto Financeiro:</td><td style="${styleCellVal} ${styleBold} color: #dc3545;">${impacto}</td></tr>
-                    
-                    <tr>
-                        <td style="${styleCellLabel}">Avoidance (Neutralizado):</td>
-                        <td style="${styleCellVal} ${styleBold} color: #198754;">${avoidance}</td>
-                    </tr>
-
+                    <tr><td style="${styleCellLabel}">Avoidance (Neutralizado):</td><td style="${styleCellVal} ${styleBold} color: #198754;">${avoidance}</td></tr>
                     <tr><td style="${styleCellLabel}">Comentários:</td><td style="${styleCellVal} text-align: left;">${comentarios}</td></tr>
                 </tbody>
             </table>
@@ -632,7 +452,6 @@ async function copyAndOpenOutlook() {
         const desc = inputs[1].value;
         
         if(cod || desc) {
-            // Aplica formatação forçada nos valores monetários
             const pAtual = formatMoney(inputs[2].value);
             const pProposta = formatMoney(inputs[3].value);
             const pNovo = formatMoney(inputs[4].value);
@@ -652,7 +471,7 @@ async function copyAndOpenOutlook() {
     
     html += `</tbody></table><br><p>Atenciosamente,<br><strong>${comprador}</strong></p></div>`;
 
-    // --- LÓGICA DE CÓPIA ROBUSTA ---
+    // Cópia para a área de transferência
     try {
         if (navigator.clipboard && navigator.clipboard.write) {
             const type = "text/html";
@@ -663,7 +482,6 @@ async function copyAndOpenOutlook() {
             throw new Error("Clipboard API não disponível");
         }
     } catch (err) {
-        console.warn("Método moderno falhou, tentando fallback legacy...", err);
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = html;
         tempDiv.style.position = "fixed";
@@ -708,5 +526,5 @@ function hideToast() { document.getElementById('post-status-toast').style.displa
 window.onload = () => {
     document.querySelector('#local-material-table tbody').innerHTML = TEMPLATE_ROW.trim();
     document.querySelector('.row-id-field').textContent = '1';
-    changeCurrency('BRL');
+    changeCurrency('USD');
 };
